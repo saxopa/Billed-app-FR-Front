@@ -4,6 +4,7 @@ import LoadingPage from "./LoadingPage.js"
 
 import Actions from './Actions.js'
 
+
 const row = (bill) => {
   return (`
     <tr>
@@ -20,7 +21,15 @@ const row = (bill) => {
   }
 
 const rows = (data) => {
-  return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
+  if (!data || !data.length) return "";
+  
+  // Tri des données par date décroissante
+  // On utilise la méthode sort pour trier les données en fonction de la date
+  // La date est convertie en objet Date pour permettre la comparaison
+  // On retourne ensuite les lignes formatées pour chaque note de frais
+  return data.sort((a, b) => {
+    return new Date(b.date) - new Date(a.date);
+  }).map(bill => row(bill)).join("");
 }
 
 export default ({ data: bills, loading, error }) => {
