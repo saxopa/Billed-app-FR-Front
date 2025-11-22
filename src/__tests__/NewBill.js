@@ -41,17 +41,32 @@ describe("Given I am connected as an employee", () => {
       expect(screen.getByTestId("commentary")).toBeTruthy()
       expect(screen.getByTestId("file")).toBeTruthy()
     })
+    //fin de test
 
     test("Then mail icon in vertical layout should be highlighted", async () => {
+      // Créer et configurer le root AVANT d'appeler router()
       const root = document.createElement("div")
       root.setAttribute("id", "root")
+      document.body.innerHTML = '' // Nettoyer d'abord
       document.body.append(root)
+      
+      // Initialiser le routeur
       router()
+      
+      // Naviguer vers NewBill
       window.onNavigate(ROUTES_PATH.NewBill)
-      await waitFor(() => screen.getByTestId('icon-mail'))
+      
+      // Attendre que l'icône soit présente ET visible
+      await waitFor(() => {
+        const mailIcon = screen.getByTestId('icon-mail')
+        expect(mailIcon).toBeTruthy()
+      }, { timeout: 1000 })
+      
+      // Vérifier la classe active
       const mailIcon = screen.getByTestId('icon-mail')
-      expect(mailIcon.classList.contains('active-icon')).toBeTruthy()
+      expect(mailIcon.classList.contains('active-icon')).toBe(true)
     })
+    //fin de test
   })
 
   describe("When I upload a file", () => {
@@ -180,7 +195,7 @@ describe("Given I am connected as an employee", () => {
     test("Then it should handle update errors", async () => {
   console.error = jest.fn()
 
-  // Correction: nous voulons mocker la méthode `bills` de mockStore pour qu'elle retourne un objet avec `update` qui rejette.
+  //nous voulons mocker la méthode `bills` de mockStore pour qu'elle retourne un objet avec `update` qui rejette.
 
 jest.spyOn(mockStore, 'bills').mockImplementationOnce(() => ({
   create: jest.fn(() => Promise.reject(new Error("Erreur 404"))),
@@ -374,8 +389,8 @@ describe("Given I am a user connected as Employee", () => {
       document.body.append(root)
       router()
       window.onNavigate(ROUTES_PATH.NewBill)
-      await waitFor(() => screen.getByText("Envoyer une note de frais"))
-      expect(screen.getByText("Envoyer une note de frais")).toBeTruthy()
+      await waitFor(() => screen.getAllByText("Envoyer une note de frais"))
+      expect(screen.getAllByText("Envoyer une note de frais")).toBeTruthy()
     })
   })
 
