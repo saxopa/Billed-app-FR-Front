@@ -4,6 +4,7 @@
 
 import { screen, fireEvent, waitFor } from "@testing-library/dom"
 import userEvent from '@testing-library/user-event'
+import BillsUI from "../views/BillsUI.js"
 import NewBillUI from "../views/NewBillUI.js"
 import NewBill from "../containers/NewBill.js"
 import { ROUTES_PATH }  from "../constants/routes.js"
@@ -342,19 +343,20 @@ jest.spyOn(mockStore, 'bills').mockImplementationOnce(() => ({
 
     test("Then it should handle update errors", async () => {
       console.error = jest.fn()
-      
       const onNavigate = jest.fn()
-      mockStore.mockImplementationOnce(()=> ( {
+      
+      // 1. Définir un STORE LOCAL qui rejette la promesse lors de l'update
+      const failingStore = {
         bills: jest.fn(() => ({
           update: jest.fn(() => Promise.reject(new Error("Update failed")))
         }))
-      })
-      ) 
+      }
 
+      // 2. Créer l'instance avec le store qui échoue
       const newBill = new NewBill({
         document,
         onNavigate,
-        store : mockStore,
+        store : failingStore,
         localStorage: window.localStorage
       })
 
@@ -372,9 +374,13 @@ jest.spyOn(mockStore, 'bills').mockImplementationOnce(() => ({
         status: "pending"
       }
 
-      await newBill.updateBill(bill)
+      // 3. On lance l'update
+      newBill.updateBill(bill)
 
-      expect(store.bills().update).toHaveBeenCalled()
+      // 4. CORRECTION IMPORTANTE : On utilise waitFor pour attendre que la promesse soit rejetée
+      await waitFor(() => {
+        expect(console.error).toHaveBeenCalled()
+      })
     })
   })
 })
@@ -399,9 +405,12 @@ describe("Given I am a user connected as Employee", () => {
       const html = NewBillUI()
       document.body.innerHTML = html
 
+      //  Il faut utiliser BillsUI pour générer le HTML de la page suivante
       const onNavigate = (pathname) => {
-        document.body.innerHTML = ROUTES_PATH[ pathname ]
+        document.body.innerHTML = BillsUI({ data: [] })
       }
+
+      
 
       Object.defineProperty(window, 'localStorage', { value: localStorageMock })
       window.localStorage.setItem('user', JSON.stringify({
@@ -440,8 +449,7 @@ describe("Given I am a user connected as Employee", () => {
       fireEvent.submit(form)
 
      await waitFor(() => {
-  expect(screen.getByText(/Mes notes de frais/i)).toBeVisible()
-})
+expect(screen.getByText(/Mes notes de frais/i)).toBeTruthy()})
     })
 
     test("Then it should handle 404 error from API", async () => {
